@@ -24,23 +24,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.csrf()
                 .disable()
                 .authorizeRequests()
-                .antMatchers("/login").hasAnyAuthority("USER","ADMIN")
+                .antMatchers("/login").authenticated()
                 .anyRequest().authenticated()
                 .and().httpBasic()
                 .authenticationEntryPoint(authEntryPoint);
 
-//        http
-//                .csrf().disable()
-//                .exceptionHandling()
-//                .authenticationEntryPoint(authEntryPoint)
-//                .and()
-//                .authorizeRequests()
-//                .antMatchers("/api/user").authenticated()
-//                .antMatchers("/api/admin/**").hasRole("ADMIN")
-//                .and()
-//                .formLogin()
-//                .and()
-//                .logout();
     }
 
     @Override

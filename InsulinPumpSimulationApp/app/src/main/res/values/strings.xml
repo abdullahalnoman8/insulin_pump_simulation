@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">InsulinPumpSimulationApp</string>
+
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="txt_setting">Settings</string>
+    <string name="txt_more_option">More</string>
+
+    <string name="txt_login">Login</string>
+    <string name="login_txt_hints">Please type your phone number and password\n to login to your Telecash account</string>
+    <string name="txt_phone_num_hint">Phone number</string>
+    <string name="txt_forget_pin">Phone number</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>

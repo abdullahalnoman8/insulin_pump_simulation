@@ -7,6 +7,8 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.snackbar.Snackbar;
+
 public class Utils {
 
     public static void showToast(Context context, String msg, Boolean isError) {
@@ -22,5 +24,21 @@ public class Utils {
         TextView v = view.findViewById(android.R.id.message);
         v.setTextColor(Color.WHITE);
         toast.show();
+    }
+
+    public static void snackbarMessage(View view, String msg, Boolean isError) {
+        Snackbar snackbar = Snackbar.make(view, msg, Snackbar.LENGTH_SHORT);
+
+        // Changing action button text color
+        View sbView = snackbar.getView();
+        TextView textView = (TextView) sbView.findViewById(com.google.android.material.R.id.snackbar_text);
+        if (isError) {
+            textView.setTextColor(Color.RED);
+        } else {
+            textView.setTextColor(Color.GREEN);
+        }
+
+
+        snackbar.show();
     }
 }

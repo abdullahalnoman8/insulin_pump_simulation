@@ -1,7 +1,6 @@
 package com.ateam.insulinpumpsimulation.fragment;
 
 
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.LayoutInflater;
@@ -15,7 +14,6 @@ import android.widget.TextView;
 
 import com.ateam.insulinpumpsimulation.R;
 import com.ateam.insulinpumpsimulation.utils.Utils;
-import com.google.android.material.snackbar.Snackbar;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
@@ -39,6 +37,8 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
     ImageView stopButton;
     @BindView(R.id.edt_blood_glucose)
     EditText insulin;
+    @BindView(R.id.machine_status)
+    TextView machine_status;
     @BindView(R.id.edt_carbohydrate)
     EditText glucagon;
     @BindView(R.id.frame_layout)
@@ -55,7 +55,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
     private double lastPoint = 3;
     private double lastPoint2 = 5;
     private Random random = new Random();
-    private int low = 80, max = 100;
+    private int low = 85, max = 95;
     private Runnable mTimer;
 
 
@@ -65,6 +65,18 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         fragment.setArguments(args);
         return fragment;
     }
+
+    Thread thread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            lastPoint++;
+            lastPoint2++;
+
+            series.appendData(new DataPoint(lastPoint, random.nextInt(max - low) + low), false, 100);
+            singleLineSeries.appendData(new DataPoint(lastPoint2, 90), false, 100);
+            graphHandler.postDelayed(this, 1000);
+        }
+    });
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -79,11 +91,11 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
 
         graph = (GraphView) view.findViewById(R.id.graph);
         series = new LineGraphSeries<DataPoint>(new DataPoint[]{
-                new DataPoint(0, 81),
+                new DataPoint(0, 91),
                 new DataPoint(1, 82),
-                new DataPoint(2, 83),
-                new DataPoint(3, 84),
-                new DataPoint(4, 83)
+                new DataPoint(2, 91),
+                new DataPoint(3, 85),
+                new DataPoint(4, 93)
         });
 
         singleLineSeries = new LineGraphSeries<>(new DataPoint[]{
@@ -98,22 +110,31 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         // Safe zone graph
         graph.addSeries(singleLineSeries);
         singleLineSeries.setDrawDataPoints(true);
-        singleLineSeries.setDrawBackground(true);
+//        singleLineSeries.setDrawBackground(true);
 
         //  Insulin Graph
-        graph.addSeries(series);
         series.setDrawDataPoints(true);
         series.setDrawBackground(true);
+        graph.addSeries(series);
+
+//        graph.getViewport().setScrollable(true); // enables horizontal scrolling
+//        graph.getViewport().setScrollableY(true); // enables vertical scrolling
+//        graph.getViewport().setScalable(true); // enables horizontal zooming and scrolling
+//        graph.getViewport().setScalableY(true); // enables vertical zooming and scrolling
 
         graph.getViewport().setMinX(0);
-        graph.getViewport().setMaxX(10);
+        graph.getViewport().setMaxX(20);
         graph.getViewport().setXAxisBoundsManual(true);
+        graph.getViewport().setScalable(true);
 
 
         graph.getViewport().setMaxY(130);
         graph.getViewport().setMinY(60);
-        graph.getViewport().setXAxisBoundsManual(true);
+//        graph.getViewport().setXAxisBoundsManual(true);
 
+
+        graph.getGridLabelRenderer().setNumHorizontalLabels(20);
+        graph.getGridLabelRenderer().setNumVerticalLabels(5);
 
         graph.getGridLabelRenderer().setLabelVerticalWidth(100);
 
@@ -128,15 +149,18 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.start_btn:
-                Utils.showToast(this.getActivity(), "Machine has started", false);
+                Utils.snackbarMessage(frameLayout, "Machine has started!!!", false);
+                machine_status.setText("Machine is running...");
                 // TODO: 1/30/20 Write method for showing initial Graph Data
                 addRandomDataPoint();
                 break;
             case R.id.stop_btn:
-                Utils.showToast(this.getActivity(), "Machine is stopped", false);
+                Utils.snackbarMessage(frameLayout, "Machine is stopped", false);
+                machine_status.setText("Machine is stopped...!!!");
                 // TODO: 1/30/20 Stop the real time graph data update
+                graphHandler.removeCallbacksAndMessages(mTimer);
+                graphHandler.removeCallbacks(mTimer);
                 break;
-
             case R.id.btn_glucagon_push:
                 if (glucagon.getText().toString().trim().equals("")) {
                     Utils.snackbarMessage(frameLayout, "Please Enter Glucagon Amount", true);
@@ -145,42 +169,6 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
                 }
                 break;
         }
-    }
-
-    private void snackbarMessage() {
-        Snackbar snackbar = Snackbar.make(frameLayout, "Please Enter Insulin amount", Snackbar.LENGTH_SHORT);
-        // Changing action button text color
-        View sbView = snackbar.getView();
-        TextView textView = (TextView) sbView.findViewById(com.google.android.material.R.id.snackbar_text);
-        textView.setTextColor(Color.RED);
-
-        snackbar.show();
-    }
-
-    private void addRandomDataPoint() {
-
-        mTimer = new Runnable() {
-            @Override
-            public void run() {
-                lastPoint++;
-                lastPoint2++;
-                series.appendData(new DataPoint(lastPoint, random.nextInt(max - low) + low), false, 100);
-                singleLineSeries.appendData(new DataPoint(lastPoint2, 90), false, 100);
-                graphHandler.postDelayed(this, 1000);
-                addRandomDataPoint();
-            }
-        };
-        graphHandler.postDelayed(mTimer, 1500);
-//        graphHandler.postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                lastPoint++;
-//                lastPoint2++;
-//                series.appendData(new DataPoint(lastPoint, random.nextInt(max - low) + low), false, 100);
-//                singleLineSeries.appendData(new DataPoint(lastPoint2, 90), false, 100);
-//                addRandomDataPoint();
-//            }
-//        }, 1500);
     }
 
     @OnClick(R.id.btn_insulin_push)
@@ -198,8 +186,35 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         super.onResume();
     }
 
+    private void addRandomDataPoint() {
+
+        mTimer = new Runnable() {
+            @Override
+            public void run() {
+                lastPoint++;
+                lastPoint2++;
+//
+//                Calendar cal = Calendar.getInstance();
+//                Date date = cal.getTime();
+//
+//
+//                long millis = System.currentTimeMillis();
+//                double x = (new Long(millis)).doubleValue();
+//                mCalendar.setTimeInMillis((long) x);
+//
+
+                series.appendData(new DataPoint(lastPoint, random.nextInt(max - low) + low), false, 100);
+                singleLineSeries.appendData(new DataPoint(lastPoint2, 90), false, 100);
+                graphHandler.postDelayed(this, 1000);
+//                addRandomDataPoint();
+            }
+        };
+        graphHandler.postDelayed(mTimer, 1500);
+    }
+
     @Override
     public void onPause() {
+        graphHandler.removeCallbacks(mTimer);
         super.onPause();
     }
 }
